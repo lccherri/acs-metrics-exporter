@@ -1,0 +1,33 @@
+query getClusterCLUSTER_CVE($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
+  result: cluster(id: $id) {
+    id
+    clusterVulnerabilityCount(query: $query)
+    clusterVulnerabilities(query: $query, pagination: $pagination) {
+      clusterCount(query: $query)
+      createdAt
+      cve
+      cvss
+      envImpact
+      fixedByVersion
+      id
+      impactScore
+      isFixable(query: $scopeQuery)
+      lastModified
+      lastScanned
+      link
+      publishedOn
+      scoreVersion
+      severity
+      summary
+      suppressActivation
+      suppressExpiry
+      suppressed
+      vulnerabilityType
+      vulnerabilityTypes
+      __typename
+    }
+    unusedVarSink(query: $policyQuery)
+    unusedVarSink(query: $scopeQuery)
+    __typename
+  }
+}

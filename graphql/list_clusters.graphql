@@ -1,0 +1,6 @@
+query listClusters {
+  clusters {
+    id
+    name
+  }
+}

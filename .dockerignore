@@ -1,0 +1,22 @@
+# Git files
+.git
+.gitignore
+
+# Build files
+.dockerignore
+Makefile
+Containerfile
+Dockerfile*
+*.md
+
+# Local binaries
+acs-metrics-exporter
+
+# IDE/editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Vendor
+vendor/

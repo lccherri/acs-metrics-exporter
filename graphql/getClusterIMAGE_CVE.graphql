@@ -1,0 +1,36 @@
+query getClusterIMAGE_CVE($id: ID!, $pagination: Pagination, $query: String, $policyQuery: String, $scopeQuery: String) {
+  result: cluster(id: $id) {
+    id
+    imageVulnerabilityCount(query: $query)
+    imageVulnerabilities(query: $query, pagination: $pagination) {
+      createdAt
+      cve
+      cvss
+      discoveredAtImage
+      envImpact
+      fixedByVersion
+      id
+      impactScore
+      isFixable(query: $scopeQuery)
+      lastModified
+      lastScanned
+      link
+      operatingSystem
+      publishedOn
+      scoreVersion
+      severity
+      summary
+      suppressActivation
+      suppressExpiry
+      suppressed
+      vulnerabilityState
+      componentCount: imageComponentCount
+      imageCount
+      deploymentCount
+      __typename
+    }
+    unusedVarSink(query: $policyQuery)
+    unusedVarSink(query: $scopeQuery)
+    __typename
+  }
+}
