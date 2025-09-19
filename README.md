@@ -37,6 +37,9 @@ The exporter provides the following Prometheus metrics:
 
 | Metric Name                               | Description                                                       | Labels                                                                 |
 |-------------------------------------------|-------------------------------------------------------------------|------------------------------------------------------------------------|
+| `acs_cluster_info`                        | Static metadata about clusters                                    | `cluster`, `cluster_id`                                        |
+| `acs_scrape_success`                      | Indicates success (1) or failure (0) of scraping vulnerabilities for a cluster and source | `cluster`, `source`                        |
+| `acs_scrape_duration_seconds`             | Duration of vulnerability scrape per cluster and source (in seconds) | `cluster`, `source`                                            |
 | `acs_vulnerabilities_total`               | Number of vulnerabilities grouped by severity, cluster, and source | `cluster`, `severity`, `source`                                       |
 | `acs_vulnerability_info`                  | Metadata about each vulnerability (non-numeric fields)             | `cluster`, `cluster_id`, `cve`, `severity`, `score_version`, `fixed_by`, `link`, `source` |
 | `acs_vulnerability_cvss`                  | CVSS score of the vulnerability                                   | `cluster`, `cve`, `source`                                            |
@@ -45,6 +48,7 @@ The exporter provides the following Prometheus metrics:
 | `acs_vulnerability_published_timestamp`   | Publication date of the CVE (Unix epoch seconds)                  | `cluster`, `cve`, `source`                                            |
 | `acs_vulnerability_modified_timestamp`    | Last modification date of the CVE (Unix epoch seconds)            | `cluster`, `cve`, `source`                                            |
 | `acs_vulnerability_scanned_timestamp`     | Last scan timestamp for the vulnerability (Unix epoch seconds)    | `cluster`, `cve`, `source`                                            |
+| `acs_vulnerability_node_os_info`          | Operating system information for node vulnerabilities             | `cluster`, `cve`, `os`                                                |
 
 ## Using Helm Chart
 
