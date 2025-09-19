@@ -26,11 +26,11 @@ The project includes a `Makefile` for common development and build tasks.
 | `make all`         | Runs `tidy` and `build` (default target).                                                                     |
 
 **Environment variables for `make run`:**
-- `ACS_ENDPOINT` – RHACS Central API endpoint (e.g., `https://central-stackrox.apps.cluster.example.com`)  
-- `ACS_TOKEN` – API token with read access  
-- `SCRAPE_INTERVAL` – Time between scrapes (default: `3600` seconds)  
-- `ACS_INSECURE_SKIP_TLS_VERIFY` – Set `true` to skip TLS verification (not recommended for production)  
-
+- `ACS_ENDPOINT` – RHACS Central API endpoint (e.g., `https://central-stackrox.apps.cluster.example.com`)
+- `ACS_TOKEN` – API token with read access
+- `SCRAPE_INTERVAL` – Time between scrapes (default: `1h`)
+- `ACS_INSECURE_SKIP_TLS_VERIFY` – Set `true` to skip TLS verification (not recommended for production)
+- `METRICS_PORT` – Port on which the exporter serves Prometheus metrics (default: `8080`)
 
 ## Metrics
 The exporter provides the following Prometheus metrics:

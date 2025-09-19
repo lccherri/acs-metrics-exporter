@@ -10,9 +10,9 @@ image:
 # Configurações específicas da aplicação
 env:
   # logLevel: "info"
-  acsEndpoint: "https://central.stackrox.svc" # E.g.: "https://central.rhacs.svc.cluster.local"
+  acsEndpoint: "https://central" # E.g.: "https://central.rhacs.svc.cluster.local"
   acsInsecureSkipTlsVerify: true
-  scrapeInterval: "3600" # In seconds, e.g., "300" for 5 minutes
+  scrapeInterval: "1h" # 1h=1 hour, 30m=30 minutes, 10m=10 minutes, etc.
 
 # Secret management with the token
 existingSecret:
@@ -36,10 +36,10 @@ podMonitor:
 # Port that the exporter listens on. For internal pod reference only.
 metricsPort: 8080
 
-resources: {}
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
   # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
   #   cpu: 100m
   #   memory: 128Mi

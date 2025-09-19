@@ -20,18 +20,28 @@ func main() {
 	acsToken := os.Getenv("ACS_TOKEN")
 
 	// Scrape interval (default 3600 seconds)
-	scrapeIntervalStr := os.Getenv("SCRAPE_INTERVAL")
-	scrapeInterval := 3600 * time.Second
-	if scrapeIntervalStr != "" {
-		if val, err := strconv.Atoi(scrapeIntervalStr); err == nil && val > 0 {
-			scrapeInterval = time.Duration(val) * time.Second
+	scrapeInterval := time.Hour
+
+	if scrapeIntervalStr := os.Getenv("SCRAPE_INTERVAL"); scrapeIntervalStr != "" {
+		if d, err := time.ParseDuration(scrapeIntervalStr); err == nil && d > 0 {
+			scrapeInterval = d
 		} else {
-			log.Printf("Invalid SCRAPE_INTERVAL=%s, using default 3600s", scrapeIntervalStr)
+			log.Printf("Invalid SCRAPE_INTERVAL=%s, using default 1h", scrapeIntervalStr)
 		}
 	}
 
 	if acsEndpoint == "" || acsToken == "" {
 		log.Fatal("Environment variables ACS_ENDPOINT and ACS_TOKEN must be set")
+	}
+
+	metricsPort := 8080
+	metricsPortStr := os.Getenv("METRICS_PORT")
+	if metricsPortStr != "" {
+		if val, err := strconv.Atoi(metricsPortStr); err == nil && val > 0 {
+			metricsPort = val
+		} else {
+			log.Printf("Invalid METRICS_PORT=%s, using default 8080", metricsPortStr)
+		}
 	}
 
 	// Init repository (data access layer)
@@ -53,6 +63,6 @@ func main() {
 
 	// Expose /metrics endpoint
 	http.Handle("/metrics", promhttp.Handler())
-	log.Println("Exporter running on port :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Exporter running on port", metricsPort)
+	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(metricsPort), nil))
 }
