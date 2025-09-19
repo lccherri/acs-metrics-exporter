@@ -46,6 +46,24 @@ The exporter provides the following Prometheus metrics:
 | `acs_vulnerability_modified_timestamp`    | Last modification date of the CVE (Unix epoch seconds)            | `cluster`, `cve`, `source`                                            |
 | `acs_vulnerability_scanned_timestamp`     | Last scan timestamp for the vulnerability (Unix epoch seconds)    | `cluster`, `cve`, `source`                                            |
 
+## Using Helm Chart
+
+To deploy the ACS Metrics Exporter using Helm, run:
+
+```bash
+helm install acs-metrics-exporter \
+    --set fullnameOverride=acs-metrics-exporter \
+    --set secret.acsToken=<your-acs-api-token> \
+    -n stackrox \ # namespace where the central is expected to be running
+    ./charts/acs-metrics-exporter/
+```
+
+**Replace `<your-acs-api-token>` with your actual RHACS API token.**  
+Do not share or commit sensitive tokens.
+
+You can customize other values using `--set` or by editing the `values.yaml` file.  
+For a full list of configurable options, see the [Helm chart documentation](./charts/acs-metrics-exporter/README.md).
+
 ## Notes
 - Metrics are refreshed at each scrape by querying the RHACS Central API.  
 - Time-related metrics are exposed as Unix epoch timestamps.  

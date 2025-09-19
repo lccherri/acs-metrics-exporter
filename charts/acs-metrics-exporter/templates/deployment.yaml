@@ -1,0 +1,41 @@
+{{/* acs-metrics-exporter-chart/templates/deployment.yaml */}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "acs-metrics-exporter.fullname" . }}
+  labels:
+    {{- include "acs-metrics-exporter.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "acs-metrics-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "acs-metrics-exporter.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.metricsPort }}
+              protocol: TCP
+          env:
+            - name: ACS_ENDPOINT
+              value: {{ .Values.env.acsEndpoint | quote }}
+            - name: ACS_INSECURE_SKIP_TLS_VERIFY
+              value: {{ .Values.env.acsInsecureSkipTlsVerify | quote }}
+            - name: ACS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.existingSecret.name | default (include "acs-metrics-exporter.fullname" .) }}
+                  key: {{ .Values.existingSecret.key | default "token" }}
+            - name: SCRAPE_INTERVAL
+              value: {{ .Values.env.scrapeInterval | quote }}
+            - name: METRICS_PORT
+              value: {{ .Values.metricsPort | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

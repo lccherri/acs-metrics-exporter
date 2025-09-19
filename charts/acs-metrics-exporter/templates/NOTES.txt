@@ -1,0 +1,45 @@
+{{/* acs-metrics-exporter-chart/templates/NOTES.txt */}}
+The '{{ .Release.Name }}' RHACS metrics exporter has been successfully installed.
+
+1. Check the Pod Status:
+   To ensure the exporter pod is running, execute the following command:
+
+   kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/instance={{ .Release.Name }}"
+
+2. Prometheus Configuration:
+{{- if .Values.podMonitor.enabled }}
+   This chart has created a PodMonitor resource named '{{ include "acs-metrics-exporter.fullname" . }}'.
+
+   If you have the Prometheus Operator installed and configured to discover resources in this namespace ({{ .Release.Namespace }}),
+   Prometheus will automatically find and start scraping metrics from the pod.
+
+   You can check the status of the PodMonitor with:
+   kubectl get podmonitor --namespace {{ .Release.Namespace }} {{ include "acs-metrics-exporter.fullname" . }}
+{{- else }}
+   The PodMonitor is disabled. Prometheus will not automatically scrape metrics from this installation.
+   To enable it, upgrade the release with the parameter '--set podMonitor.enabled=true'.
+{{- end }}
+
+3. Secret Management:
+{{- if .Values.existingSecret.name }}
+   The exporter is configured to use the API token from the existing Secret named '{{ .Values.existingSecret.name }}'.
+{{- else if .Values.secret.roxApiToken }}
+   A new Secret named '{{ include "acs-metrics-exporter.fullname" . }}' was created to store your API token.
+   Please note that passing secrets via '--set-string' is less secure and not recommended for production environments.
+{{- else }}
+   WARNING: No API token was provided (via 'secret.roxApiToken') and no existing Secret was specified (via 'existingSecret.name').
+   The exporter will likely fail to start. Please upgrade the installation with a valid token.
+{{- end }}
+
+4. Accessing Metrics for Debugging (without a Service):
+   Since this chart does not create a Service, you can use 'kubectl port-forward' directly on the pod to test the metrics endpoint.
+
+   First, get the pod name:
+   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+   echo "Forwarding port to pod: $POD_NAME"
+
+   Now, forward the port (this command will remain active):
+   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME {{ .Values.metricsPort }}
+
+   In another terminal, you can now access the metrics:
+   curl http://127.0.0.1:{{ .Values.metricsPort }}/metrics

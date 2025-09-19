@@ -1,0 +1,45 @@
+# acs-metrics-exporter-chart/values.yaml
+
+replicaCount: 1
+
+image:
+  repository: quay.io/lcherri/acs-metrics-exporter
+  pullPolicy: IfNotPresent
+  tag: "v0.1.0"
+
+# Configurações específicas da aplicação
+env:
+  # logLevel: "info"
+  acsEndpoint: "https://central.stackrox.svc" # E.g.: "https://central.rhacs.svc.cluster.local"
+  acsInsecureSkipTlsVerify: true
+  scrapeInterval: "3600" # In seconds, e.g., "300" for 5 minutes
+
+# Secret management with the token
+existingSecret:
+  name: "" # If you already have a secret with the token, put its name here
+  key: "token"
+
+  # If 'existingSecret.name' is empty, the chart will create a new secret with this token
+  # IMPORTANT: Pass this value via --set-string or --values. Do not commit it to Git.
+secret:
+  acsToken: ""
+
+# PodMonitor configuration (requires Prometheus Operator)
+# By default, it is enabled in this version of the chart.
+podMonitor:
+  enabled: true
+  interval: 10m
+  scrapeTimeout: 10s
+  # Additional labels for the PodMonitor, if needed
+  additionalLabels: {}
+  
+# Port that the exporter listens on. For internal pod reference only.
+metricsPort: 8080
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
