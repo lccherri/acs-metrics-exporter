@@ -13,19 +13,44 @@ import (
 type Collector struct {
 	repo repository.ACSRepository
 
-	vulnCount       *prometheus.GaugeVec
-	vulnInfo        *prometheus.GaugeVec
-	vulnCVSS        *prometheus.GaugeVec
-	vulnImpact      *prometheus.GaugeVec
-	vulnEnvImpact   *prometheus.GaugeVec
-	vulnPublished   *prometheus.GaugeVec
-	vulnModified    *prometheus.GaugeVec
-	vulnLastScanned *prometheus.GaugeVec
+	clusterInfo         *prometheus.GaugeVec
+	scrapeSuccess  		*prometheus.GaugeVec
+	scrapeDuration		*prometheus.GaugeVec
+	vulnCount           *prometheus.GaugeVec
+	vulnInfo            *prometheus.GaugeVec
+	vulnCVSS            *prometheus.GaugeVec
+	vulnImpact          *prometheus.GaugeVec
+	vulnEnvImpact       *prometheus.GaugeVec
+	vulnPublished       *prometheus.GaugeVec
+	vulnModified        *prometheus.GaugeVec
+	vulnLastScanned     *prometheus.GaugeVec
+	vulnOperationSystem *prometheus.GaugeVec
 }
 
 func NewCollector(repo repository.ACSRepository) *Collector {
 	return &Collector{
 		repo: repo,
+		clusterInfo: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "acs_cluster_info",
+				Help: "Static metadata about clusters",
+			},
+			[]string{"cluster", "cluster_id"},
+		),
+		scrapeSuccess: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "acs_scrape_success",
+				Help: "Indicates success (1) or failure (0) of scraping vulnerabilities for a cluster and source",
+			},
+			[]string{"cluster", "source"},
+		),
+		scrapeDuration: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "acs_scrape_duration_seconds",
+				Help: "Duration of vulnerability scrape per cluster and source (in seconds)",
+			},
+			[]string{"cluster", "source"},
+		),
 		vulnCount: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{
 				Name: "acs_vulnerabilities_total",
@@ -82,11 +107,21 @@ func NewCollector(repo repository.ACSRepository) *Collector {
 			},
 			[]string{"cluster", "cve", "source"},
 		),
+		vulnOperationSystem: prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "acs_vulnerability_node_os_info",
+				Help: "Operating system information for node vulnerabilities",
+			},
+			[]string{"cluster", "cve", "os"},
+		),
 	}
 }
 
 // Register registers metrics with Prometheus
 func (c *Collector) Register() {
+	prometheus.MustRegister(c.clusterInfo)
+	prometheus.MustRegister(c.scrapeSuccess)
+	prometheus.MustRegister(c.scrapeDuration)
 	prometheus.MustRegister(c.vulnCount)
 	prometheus.MustRegister(c.vulnInfo)
 	prometheus.MustRegister(c.vulnCVSS)
@@ -95,22 +130,32 @@ func (c *Collector) Register() {
 	prometheus.MustRegister(c.vulnPublished)
 	prometheus.MustRegister(c.vulnModified)
 	prometheus.MustRegister(c.vulnLastScanned)
+	prometheus.MustRegister(c.vulnOperationSystem)
 }
 
 // parseTime safely parses a timestamp and returns epoch seconds
-func parseTime(ts string) float64 {
+func parseTime(ts string) (float64, bool) {
 	if ts == "" {
-		return 0
+		return 0, false
 	}
 	t, err := time.Parse(time.RFC3339, ts)
 	if err != nil {
 		log.Printf("Invalid time format: %s", ts)
-		return 0
+		return 0, false
 	}
-	return float64(t.Unix())
+	return float64(t.Unix()), true
 }
 
-// updateMetrics atualiza métricas a partir de uma vulnerabilidade
+// helper to convert concrete slices to []VulnerabilityBase
+func toBaseSlice[T models.VulnerabilityBase](in []T) []models.VulnerabilityBase {
+	out := make([]models.VulnerabilityBase, len(in))
+	for i := range in {
+		out[i] = in[i]
+	}
+	return out
+}
+
+// updateMetrics updates metrics from a vulnerability
 func (c *Collector) updateMetrics(v models.VulnerabilityBase, clusterName, clusterID, source string) {
 	// Info metric
 	c.vulnInfo.WithLabelValues(
@@ -130,9 +175,22 @@ func (c *Collector) updateMetrics(v models.VulnerabilityBase, clusterName, clust
 	c.vulnEnvImpact.WithLabelValues(clusterName, v.GetCVE(), source).Set(v.GetEnvImpact())
 
 	// Time metrics
-	c.vulnPublished.WithLabelValues(clusterName, v.GetCVE(), source).Set(parseTime(v.GetPublishedOn()))
-	c.vulnModified.WithLabelValues(clusterName, v.GetCVE(), source).Set(parseTime(v.GetLastModified()))
-	c.vulnLastScanned.WithLabelValues(clusterName, v.GetCVE(), source).Set(parseTime(v.GetLastScanned()))
+	if ts, ok := parseTime(v.GetPublishedOn()); ok {
+		c.vulnPublished.WithLabelValues(clusterName, v.GetCVE(), source).Set(ts)
+	}
+	if ts, ok := parseTime(v.GetLastModified()); ok {
+		c.vulnModified.WithLabelValues(clusterName, v.GetCVE(), source).Set(ts)
+	}
+	if ts, ok := parseTime(v.GetLastScanned()); ok {
+		c.vulnLastScanned.WithLabelValues(clusterName, v.GetCVE(), source).Set(ts)
+	}
+
+	switch val := v.(type) {
+    case models.NodeVulnerability:
+		c.vulnOperationSystem.WithLabelValues(clusterName, v.GetCVE(), val.OperatingSystem).Set(1)
+    }
+
+
 }
 
 // Collect fetches data and updates metrics
@@ -145,6 +203,9 @@ func (c *Collector) Collect() {
 
 	for _, cluster := range clusters {
 		// Reset metrics for this cluster
+		c.clusterInfo.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
+		c.scrapeSuccess.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
+		c.scrapeDuration.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
 		c.vulnCount.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
 		c.vulnInfo.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
 		c.vulnCVSS.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
@@ -153,42 +214,69 @@ func (c *Collector) Collect() {
 		c.vulnPublished.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
 		c.vulnModified.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
 		c.vulnLastScanned.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
+		c.vulnOperationSystem.DeletePartialMatch(prometheus.Labels{"cluster": cluster.Name})
+
+		// Cluster info
+		c.clusterInfo.WithLabelValues(cluster.Name, cluster.ID).Set(1)
 
 		// Map to aggregate vuln counts
 		counts := make(map[string]map[string]int)
 
-		// Cluster CVEs
-		if clusterVulns, err := c.repo.GetClusterVulns(cluster); err == nil {
-			for _, v := range clusterVulns {
-				c.updateMetrics(v, cluster.Name, cluster.ID, "cluster")
+		// Helper closure para scrape
+		scrape := func(source string, fetch func(models.Cluster) ([]models.VulnerabilityBase, error)) {
+			vulns, err := fetch(cluster)
+
+			if err != nil {
+				log.Printf("Error fetching %s vulns for %s: %v", source, cluster.Name, err)
+				c.scrapeSuccess.WithLabelValues(cluster.Name, source).Set(0)
+				return
+			}
+
+			for _, v := range vulns {
+				c.updateMetrics(v, cluster.Name, cluster.ID, source)
 				if _, ok := counts[v.GetSeverity()]; !ok {
 					counts[v.GetSeverity()] = make(map[string]int)
 				}
-				counts[v.GetSeverity()]["cluster"]++
+				counts[v.GetSeverity()][source]++
 			}
+			c.scrapeSuccess.WithLabelValues(cluster.Name, source).Set(1)
 		}
+
+		// Cluster CVEs
+		scrape("cluster", func(cl models.Cluster) ([]models.VulnerabilityBase, error) {
+			start := time.Now()
+			v, err := c.repo.GetClusterVulns(cl)
+			duration := time.Since(start).Seconds()
+			c.scrapeDuration.WithLabelValues(cl.Name, "cluster").Set(duration)
+			if err != nil {
+				return nil, err
+			}
+			return toBaseSlice(v), nil
+		})
 
 		// Node CVEs
-		if nodeVulns, err := c.repo.GetNodeVulns(cluster); err == nil {
-			for _, v := range nodeVulns {
-				c.updateMetrics(v, cluster.Name, cluster.ID, "node")
-				if _, ok := counts[v.GetSeverity()]; !ok {
-					counts[v.GetSeverity()] = make(map[string]int)
-				}
-				counts[v.GetSeverity()]["node"]++
+		scrape("node", func(cl models.Cluster) ([]models.VulnerabilityBase, error) {
+			start := time.Now()
+			v, err := c.repo.GetNodeVulns(cl)
+			duration := time.Since(start).Seconds()
+			c.scrapeDuration.WithLabelValues(cl.Name, "node").Set(duration)
+			if err != nil {
+				return nil, err
 			}
-		}
+			return toBaseSlice(v), nil
+		})
 
 		// Image CVEs
-		if imageVulns, err := c.repo.GetImageVulns(cluster); err == nil {
-			for _, v := range imageVulns {
-				c.updateMetrics(v, cluster.Name, cluster.ID, "image")
-				if _, ok := counts[v.GetSeverity()]; !ok {
-					counts[v.GetSeverity()] = make(map[string]int)
-				}
-				counts[v.GetSeverity()]["image"]++
+		scrape("image", func(cl models.Cluster) ([]models.VulnerabilityBase, error) {
+			start := time.Now()
+			v, err := c.repo.GetImageVulns(cl)
+			duration := time.Since(start).Seconds()
+			c.scrapeDuration.WithLabelValues(cl.Name, "image").Set(duration)
+			if err != nil {
+				return nil, err
 			}
-		}
+			return toBaseSlice(v), nil
+		})
 
 		// Set vulnCount with the aggregated values
 		for severity, sources := range counts {
