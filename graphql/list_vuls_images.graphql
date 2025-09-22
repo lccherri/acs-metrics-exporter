@@ -1,0 +1,47 @@
+query getImageVulnerabilities {
+  imageVulnerabilities {
+    createdAt
+    cve
+    cvss
+    discoveredAtImage
+    envImpact
+    isFixable
+    fixedByVersion
+    id
+    impactScore
+    lastModified
+    lastScanned
+    link
+    operatingSystem
+    publishedOn
+    scoreVersion
+    severity
+    summary
+    suppressActivation
+    suppressExpiry
+    suppressed
+    vulnerabilityState
+    componentCount: imageComponentCount
+    imageCount
+    deploymentCount
+    deployments {
+      id
+      name
+      namespace
+      cluster {
+        id
+        name
+      }
+    }
+    images {
+      id
+      name {
+        fullName
+      }
+      operatingSystem
+      scanTime
+      priority
+    }
+    __typename
+  }
+}

@@ -1,0 +1,19 @@
+query getClusterVulnerabilities {
+  clusterVulnerabilities {
+    cve
+    severity
+    isFixable
+    cvss
+    scoreVersion
+    summary
+    link
+    publishedOn
+    vulnerabilityType
+    clusterCount
+    clusters {
+        id
+        name
+        type
+    }
+  }
+}

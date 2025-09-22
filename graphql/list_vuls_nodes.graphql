@@ -1,0 +1,31 @@
+query getNodeVulnerabilities {
+  nodeVulnerabilities {
+    cve
+    severity
+    isFixable
+    cvss
+    scoreVersion
+    summary
+    link
+    publishedOn
+    nodeCount
+    suppressActivation
+    suppressExpiry
+    suppressed
+    fixedByVersion
+    nodeComponents {
+      name
+      version
+      fixedIn
+    }
+    nodes {
+      id
+      name
+      operatingSystem
+      cluster {
+        id
+        name
+      }
+    }
+  }
+}
