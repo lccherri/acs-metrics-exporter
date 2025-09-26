@@ -1,6 +1,5 @@
-query getImageVulnerabilities {
-  imageVulnerabilities {
-    createdAt
+query getImageVulnerabilities($query: String, $pagination: Pagination) {
+  imageVulnerabilities(query: $query, pagination: $pagination) {
     cve
     cvss
     discoveredAtImage
@@ -13,6 +12,7 @@ query getImageVulnerabilities {
     lastScanned
     link
     operatingSystem
+    createdAt
     publishedOn
     scoreVersion
     severity
@@ -24,23 +24,27 @@ query getImageVulnerabilities {
     componentCount: imageComponentCount
     imageCount
     deploymentCount
-    deployments {
-      id
-      name
-      namespace
-      cluster {
-        id
-        name
-      }
-    }
     images {
       id
       name {
+        tag
+        remote
+        registry
         fullName
       }
       operatingSystem
       scanTime
       priority
+      deployments {
+        id
+        name
+        namespace
+        platformComponent
+        cluster {
+          id
+          name
+        }
+      }
     }
     __typename
   }

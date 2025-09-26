@@ -1,5 +1,5 @@
-query getNodeVulnerabilities {
-  nodeVulnerabilities {
+query getNodeVulnerabilities($query: String, $pagination: Pagination) {
+  nodeVulnerabilities(query: $query, pagination: $pagination) {
     cve
     severity
     isFixable
@@ -7,24 +7,29 @@ query getNodeVulnerabilities {
     scoreVersion
     summary
     link
+    createdAt
     publishedOn
+    lastModified
+    lastScanned
     nodeCount
     suppressActivation
     suppressExpiry
     suppressed
     fixedByVersion
-    nodeComponents {
-      name
-      version
-      fixedIn
-    }
     nodes {
       id
       name
       operatingSystem
+      kubeletVersion
+      containerRuntimeVersion
       cluster {
         id
         name
+      }
+      nodeComponents {
+        name
+        version
+        fixedIn
       }
     }
   }
