@@ -4,6 +4,8 @@ query getClusterVulnerabilities($query: String, $pagination: Pagination) {
     severity
     isFixable
     cvss
+    envImpact
+    impactScore
     scoreVersion
     summary
     link
@@ -11,6 +13,7 @@ query getClusterVulnerabilities($query: String, $pagination: Pagination) {
     publishedOn
     lastModified
     lastScanned
+    fixedByVersion
     vulnerabilityType
     clusterCount
     clusters {

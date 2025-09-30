@@ -107,21 +107,21 @@ func NewCollector(repo repository.ACSRepository) *Collector {
 		),
 		vulnerableClusterInfo: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: "acs_vulnerable_cluster_info", Help: "Indicates that a specific cluster is affected by a CVE. Value is always 1."},
-			[]string{"cve", "secured_cluster_name", "type"},
+			[]string{"cve", "secured_cluster_name", "secured_cluster_type"},
 		),
 
 		// General vulnerability metrics that apply to all scopes
 		vulnerabilityCvss: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: "acs_vulnerability_cvss", Help: "The CVSS score of a vulnerability. The value of the metric is the score itself."},
-			[]string{"cve", "score_version"},
+			[]string{"cve", "score_version", "scope"},
 		),
 		vulnerabilityEnvImpact: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: "acs_vulnerability_env_impact", Help: "The environmental impact score of a vulnerability. The value of the metric is the score itself."},
-			[]string{"cve", "score_version"},
+			[]string{"cve", "score_version", "scope"},
 		),
 		vulnerabilityImpactScore: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: "acs_vulnerability_impact_score", Help: "The impact score of a vulnerability. The value of the metric is the score itself."},
-			[]string{"cve", "score_version"},
+			[]string{"cve", "score_version", "scope"},
 		),
 		vulnerabilityCreatedAtTimestamp: prometheus.NewGaugeVec(
 			prometheus.GaugeOpts{Name: "acs_vulnerability_created_at_timestamp_seconds", Help: "The creation date of the CVE, in Unix Timestamp format."},
@@ -232,7 +232,6 @@ func (c *Collector) collectVulnerabilities(ctx context.Context) {
 	// Reset all vulnerability metrics before each scrape
 	c.scrapeSuccess.Reset()
 	c.scrapeDuration.Reset()
-	c.clusterInfo.Reset()
 	c.imageVulnerabilityInfo.Reset()
 	c.nodeVulnerabilityInfo.Reset()
 	c.platformVulnerabilityInfo.Reset()
@@ -348,13 +347,13 @@ func (c *Collector) populateBaseVulnerabilityMetrics(v models.BaseVulnerability,
 
 	// Numeric metrics
 	if v.CVSS != nil {
-		c.vulnerabilityCvss.WithLabelValues(v.CVE, v.ScoreVersion).Set(*v.CVSS)
+		c.vulnerabilityCvss.WithLabelValues(v.CVE, v.ScoreVersion, scope).Set(*v.CVSS)
 	}
 	if v.EnvImpact != nil {
-		c.vulnerabilityEnvImpact.WithLabelValues(v.CVE, v.ScoreVersion).Set(*v.EnvImpact)
+		c.vulnerabilityEnvImpact.WithLabelValues(v.CVE, v.ScoreVersion, scope).Set(*v.EnvImpact)
 	}
 	if v.ImpactScore != nil {
-		c.vulnerabilityImpactScore.WithLabelValues(v.CVE, v.ScoreVersion).Set(*v.ImpactScore)
+		c.vulnerabilityImpactScore.WithLabelValues(v.CVE, v.ScoreVersion, scope).Set(*v.ImpactScore)
 	}
 	
 	// Timestamp Metrics

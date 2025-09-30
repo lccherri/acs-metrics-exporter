@@ -4,6 +4,8 @@ query getNodeVulnerabilities($query: String, $pagination: Pagination) {
     severity
     isFixable
     cvss
+    envImpact
+    impactScore    
     scoreVersion
     summary
     link
