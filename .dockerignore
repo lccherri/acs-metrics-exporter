@@ -21,4 +21,6 @@ acs-metrics-exporter
 # Vendor
 vendor/
 
+# Util
 scripts/
+charts/
