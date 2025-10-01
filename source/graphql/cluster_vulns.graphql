@@ -1,0 +1,25 @@
+query getClusterVulnerabilities($query: String, $pagination: Pagination) {
+  clusterVulnerabilities(query: $query, pagination: $pagination) {
+    cve
+    severity
+    isFixable
+    cvss
+    envImpact
+    impactScore
+    scoreVersion
+    summary
+    link
+    createdAt
+    publishedOn
+    lastModified
+    lastScanned
+    fixedByVersion
+    vulnerabilityType
+    clusterCount
+    clusters {
+        id
+        name
+        type
+    }
+  }
+}

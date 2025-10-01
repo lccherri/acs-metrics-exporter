@@ -1,0 +1,51 @@
+query getImageVulnerabilities($query: String, $pagination: Pagination) {
+  imageVulnerabilities(query: $query, pagination: $pagination) {
+    cve
+    cvss
+    discoveredAtImage
+    envImpact
+    isFixable
+    fixedByVersion
+    id
+    scoreVersion
+    impactScore
+    lastModified
+    lastScanned
+    link
+    operatingSystem
+    createdAt
+    publishedOn
+    severity
+    summary
+    suppressActivation
+    suppressExpiry
+    suppressed
+    vulnerabilityState
+    componentCount: imageComponentCount
+    imageCount
+    deploymentCount
+    images {
+      id
+      name {
+        tag
+        remote
+        registry
+        fullName
+      }
+      operatingSystem
+      scanTime
+      priority
+      deployments {
+        id
+        name
+        namespace
+        platformComponent
+        cluster {
+          id
+          name
+        }
+      }
+    }
+    __typename
+  }
+}
