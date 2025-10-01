@@ -20,3 +20,5 @@ acs-metrics-exporter
 
 # Vendor
 vendor/
+
+scripts/
