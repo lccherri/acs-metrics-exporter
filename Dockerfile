@@ -9,12 +9,11 @@ WORKDIR /app
 # Enable static build
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
-# Copy go mod and download deps
-COPY go.mod go.sum ./
-RUN go mod download
-
 # Copy source code
-COPY . .
+COPY ./source .
+
+# Download deps
+RUN go mod download
 
 # Build binary (main at cmd/exporter)
 RUN go build -o acs-metrics-exporter ./cmd/exporter

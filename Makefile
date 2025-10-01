@@ -8,23 +8,24 @@ IMAGE_NAME=acs-metrics-exporter:latest
 
 # Go version target
 GO_VERSION=1.25
+SRC_DIR=source
 
 # Default target
 all: tidy build
 
 # Initialize go module (only first time)
 init:
-	go mod init $(MODULE_NAME)
-	go get github.com/prometheus/client_golang@latest
-	go mod tidy
+	cd $(SRC_DIR) && go mod init $(MODULE_NAME)
+	cd $(SRC_DIR) && go get github.com/prometheus/client_golang@latest
+	cd $(SRC_DIR) && go mod tidy
 
 # Update dependencies
 tidy:
-	go mod tidy
+	cd $(SRC_DIR) && go mod tidy
 
 # Build local binary
 build:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(BINARY_NAME) main.go
+	cd $(SRC_DIR) && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../$(BINARY_NAME) ./cmd/exporter
 
 # Clean binary
 clean:

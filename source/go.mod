@@ -1,6 +1,6 @@
 module acs-metrics-exporter
 
-go 1.23.8
+go 1.24.7
 
 require github.com/prometheus/client_golang v1.23.2
 
