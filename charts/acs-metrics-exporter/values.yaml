@@ -28,7 +28,7 @@ secret:
 # By default, it is enabled in this version of the chart.
 podMonitor:
   enabled: true
-  interval: 10m
+  interval: 5m
   scrapeTimeout: 10s
   # Additional labels for the PodMonitor, if needed
   additionalLabels: {}
